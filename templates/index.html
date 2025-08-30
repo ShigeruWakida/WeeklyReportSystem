@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>週報管理システム</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-file-text"></i> 週報管理システム
+            </span>
+            <div class="text-white d-flex align-items-center gap-3">
+                <button id="toggleSidebarBtn" class="btn btn-outline-light btn-sm" onclick="toggleSidebar()" title="サイドバー表示切替">
+                    <i class="bi bi-layout-sidebar-inset"></i>
+                </button>
+                <button id="processReportsBtn" class="btn btn-light btn-sm" onclick="processWeeklyReports()" title="Gmail から新しい週報を処理">
+                    <i class="bi bi-envelope-plus"></i> 週報処理
+                </button>
+                <div id="processStatus" style="display: none;" class="text-warning">
+                    <i class="bi bi-hourglass-split"></i> 処理中...
+                </div>
+                <div>
+                    <span id="totalCount">0</span>件
+                    <small class="ms-2 opacity-75">（最新10件表示）</small>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-3">
+        <div class="row">
+            <!-- サイドバー -->
+            <div class="col-md-3" id="sidebarColumn">
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <button class="btn btn-link text-decoration-none p-0 w-100 text-start" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="true" aria-controls="filterCollapse">
+                            <i class="bi bi-funnel"></i> フィルター
+                            <i class="bi bi-chevron-up float-end collapse-icon"></i>
+                        </button>
+                    </div>
+                    <div class="collapse show" id="filterCollapse">
+                        <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">報告者</label>
+                            <select id="reporterFilter" class="form-select">
+                                <option value="">全て</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">客先</label>
+                            <select id="clientFilter" class="form-select">
+                                <option value="">全て</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">製品</label>
+                            <select id="productFilter" class="form-select">
+                                <option value="">全て</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">開始日</label>
+                            <input type="date" id="dateFrom" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">終了日</label>
+                            <input type="date" id="dateTo" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">キーワード検索</label>
+                            <input type="text" id="searchText" class="form-control" placeholder="検索...">
+                        </div>
+                        <button id="applyFilter" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> 検索
+                        </button>
+                        <button id="clearFilter" class="btn btn-secondary w-100 mt-2" onclick="clearAllFilters()">
+                            <i class="bi bi-arrow-clockwise"></i> すべてクリア
+                        </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 統計情報 -->
+                <div class="card">
+                    <div class="card-header">
+                        <button class="btn btn-link text-decoration-none p-0 w-100 text-start" type="button" data-bs-toggle="collapse" data-bs-target="#statsCollapse" aria-expanded="true" aria-controls="statsCollapse">
+                            <i class="bi bi-bar-chart"></i> 統計
+                            <i class="bi bi-chevron-up float-end collapse-icon"></i>
+                        </button>
+                    </div>
+                    <div class="collapse show" id="statsCollapse">
+                        <div class="card-body">
+                            <div id="statsContainer">
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- メインコンテンツ -->
+            <div class="col-md-9" id="mainColumn">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-list-ul"></i> 週報一覧
+                    </div>
+                    <div class="card-body">
+                        <div id="reportsContainer">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div id="paginationContainer" class="d-flex justify-content-center">
+                            <!-- ページネーションがここに表示される -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 選択された週報の表示エリア -->
+                <div id="selectedReportsArea" class="card mt-3" style="display: none;">
+                    <div class="card-header">
+                        <i class="bi bi-check2-square"></i> 選択された週報 (<span id="selectedCount">0</span>件)
+                    </div>
+                    <div class="card-body">
+                        <div id="selectedReportsContainer">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 客先案件一覧の表示エリア -->
+                <div id="clientProjectsArea" class="card mt-3" style="display: none;">
+                    <div class="card-header">
+                        <i class="bi bi-building"></i> <span id="clientProjectsTitle">客先案件一覧</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="clientProjectsContainer">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 製品案件一覧の表示エリア -->
+                <div id="productProjectsArea" class="card mt-3" style="display: none;">
+                    <div class="card-header">
+                        <i class="bi bi-box-seam"></i> <span id="productProjectsTitle">製品案件一覧</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="productProjectsContainer">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 詳細モーダル -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">週報詳細</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalContent">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 週報処理ログモーダル -->
+    <div class="modal fade" id="processLogModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">週報処理実行中</h5>
+                    <button type="button" class="btn-close" id="processLogCloseBtn" style="display: none;" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="processLogContent" class="bg-dark text-light p-3 rounded" style="height: 400px; overflow-y: auto; font-family: monospace; font-size: 0.9em; color: #ffffff !important; background-color: #212529 !important;">
+                        <div class="text-center">
+                            <div class="spinner-border text-light" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <div class="mt-2">週報処理を開始しています...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div id="processLogStatus" class="text-muted me-auto">処理中...</div>
+                    <button type="button" class="btn btn-secondary" id="processLogOkBtn" style="display: none;" data-bs-dismiss="modal">閉じる</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- データベース修正モーダル -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">案件データ修正</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="editModalContent">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="button" class="btn btn-primary" onclick="saveProjectData()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/js/app_fixed.js"></script>
+    <script src="/static/js/edit_functions.js"></script>
+</body>
+</html>

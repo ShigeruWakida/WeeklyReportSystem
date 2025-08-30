@@ -1,0 +1,283 @@
+/* 週報管理システム スタイルシート */
+
+body {
+    background-color: #f8f9fa;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+    margin-bottom: 1rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f1f3f5;
+    cursor: pointer;
+}
+
+.report-row {
+    transition: all 0.2s;
+}
+
+.report-row:hover {
+    transform: translateX(2px);
+}
+
+.content-area pre {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.badge {
+    font-weight: normal;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .col-md-3, .col-md-9 {
+        padding: 0 0.5rem;
+    }
+    
+    .table {
+        font-size: 0.85rem;
+    }
+}
+
+/* ローディングスピナー */
+.spinner-border {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* モーダル */
+.modal-body pre {
+    background-color: #ffffff;
+    padding: 1rem;
+    border-radius: 0.25rem;
+}
+
+/* フィルターセクション */
+#searchText {
+    border-left: 3px solid #0d6efd;
+}
+
+#searchText:focus {
+    border-color: #0a58ca;
+    box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
+}
+
+/* テーブルのレスポンシブ対応 */
+.table-responsive {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+/* スクロールバーのカスタマイズ */
+.table-responsive::-webkit-scrollbar {
+    width: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* チェックボックス関連のスタイル */
+.report-checkbox {
+    cursor: pointer;
+    transform: scale(1.2);
+}
+
+.report-row td:first-child {
+    text-align: center;
+    vertical-align: middle;
+}
+
+#selectAll {
+    cursor: pointer;
+    transform: scale(1.2);
+}
+
+/* 選択された週報エリア */
+#selectedReportsArea {
+    transition: all 0.3s ease;
+}
+
+#selectedReportsContainer .border {
+    transition: all 0.2s ease;
+    border-color: #dee2e6 !important;
+}
+
+#selectedReportsContainer .border:hover {
+    border-color: #0d6efd !important;
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
+}
+
+/* 選択された週報の詳細エリア */
+#selectedReportsContainer .bg-light {
+    background-color: #f8f9fa !important;
+    border: 1px solid #e9ecef;
+}
+
+#selectedReportsContainer .bg-white {
+    background-color: #ffffff !important;
+}
+
+/* アニメーション効果 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#selectedReportsArea {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* バッジスタイル */
+.badge.bg-primary {
+    background-color: #0d6efd !important;
+}
+
+/* 報告者リンクスタイル */
+.reporter-link {
+    color: #0d6efd !important;
+    text-decoration: none !important;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.reporter-link:hover {
+    color: #0a58ca !important;
+    text-decoration: underline !important;
+    transform: scale(1.05);
+}
+
+.reporter-link:focus {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* 客先リンクスタイル */
+.client-link {
+    color: #198754 !important;
+    text-decoration: none !important;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.client-link:hover {
+    color: #157347 !important;
+    text-decoration: underline !important;
+    transform: scale(1.05);
+}
+
+.client-link:focus {
+    outline: 2px solid #198754;
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* 製品リンクスタイル */
+.product-link {
+    color: #fd7e14 !important;
+    text-decoration: none !important;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.product-link:hover {
+    color: #e55a00 !important;
+    text-decoration: underline !important;
+    transform: scale(1.05);
+}
+
+.product-link:focus {
+    outline: 2px solid #fd7e14;
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* フィルタハイライト */
+.border-primary {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
+    transition: all 0.15s ease-in-out;
+}
+
+/* 折りたたみアイコンの回転アニメーション */
+.collapse-icon {
+    transition: transform 0.2s ease-in-out;
+}
+
+.btn[aria-expanded="false"] .collapse-icon {
+    transform: rotate(180deg);
+}
+
+.btn[aria-expanded="true"] .collapse-icon {
+    transform: rotate(0deg);
+}
+
+/* 折りたたみボタンのスタイル */
+.card-header .btn-link {
+    color: inherit !important;
+    font-weight: 600;
+}
+
+.card-header .btn-link:hover {
+    color: #0d6efd !important;
+}
+
+.card-header .btn-link:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+/* サイドバー切替アニメーション */
+#sidebarColumn, #mainColumn {
+    transition: all 0.3s ease-in-out;
+}
+
+/* サイドバー切替ボタン */
+#toggleSidebarBtn {
+    transition: all 0.2s ease;
+}
+
+#toggleSidebarBtn:hover {
+    transform: scale(1.05);
+}
+
+/* レスポンシブ: 小さい画面では自動的にサイドバーを非表示 */
+@media (max-width: 992px) {
+    #sidebarColumn {
+        display: none !important;
+    }
+    
+    #mainColumn {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+    
+    #toggleSidebarBtn {
+        display: inline-block;
+    }
+}

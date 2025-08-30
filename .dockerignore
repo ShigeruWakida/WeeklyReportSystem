@@ -1,0 +1,17 @@
+*.pyc
+__pycache__/
+.git/
+.gitignore
+*.md
+.DS_Store
+token.pkl
+credentials.json
+vertex-key.json
+processed_ids.json
+weekly_reports.db
+*.log
+.env
+venv/
+env/
+.vscode/
+.idea/

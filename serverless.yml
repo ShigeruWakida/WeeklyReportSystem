@@ -1,0 +1,53 @@
+# Serverless Framework設定（AWS Lambda + API Gateway）
+service: weekly-report-system
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: ap-northeast-1
+  stage: ${opt:stage, 'dev'}
+  environment:
+    DATABASE_PATH: /tmp/weekly_reports.db
+    SECRET_KEY: ${env:SECRET_KEY}
+  
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+      Resource: 
+        - arn:aws:s3:::${self:custom.bucketName}/*
+
+custom:
+  bucketName: weekly-reports-${self:provider.stage}
+  pythonRequirements:
+    dockerizePip: true
+    layer: true
+
+functions:
+  app:
+    handler: wsgi_handler.handler
+    events:
+      - http:
+          path: /
+          method: ANY
+          cors: true
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors: true
+    layers:
+      - {Ref: PythonRequirementsLambdaLayer}
+
+plugins:
+  - serverless-python-requirements
+  - serverless-wsgi
+
+resources:
+  Resources:
+    WeeklyReportsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.bucketName}
+        VersioningConfiguration:
+          Status: Enabled

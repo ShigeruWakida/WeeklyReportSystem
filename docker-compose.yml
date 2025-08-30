@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/app/data
+      - ./weekly_reports.db:/app/data/weekly_reports.db
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_PATH=/app/data/weekly_reports.db
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
+    restart: unless-stopped
