@@ -28,7 +28,7 @@ from vertexai.generative_models import GenerativeModel
 # 設定
 # --------------------
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
-PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT_ID", "your-project-id")  # Google Cloud プロジェクトID
+PROJECT_ID = "weekly-report-system-470606"  # Google Cloud プロジェクトID
 LOCATION = "asia-northeast1"     # Vertex AI ロケーション（東京）
 DB_FILE = "weekly_reports.db"    # SQLite DBファイル
 PROCESSED_FILE = "processed_ids.json"
@@ -211,6 +211,19 @@ def process_weekly_report(subject, body, sender, date):
 # DB登録関数
 # --------------------
 def db_insert(mail_id, report_date, reporter, report):
+    # リスト型のフィールドをカンマ区切りの文字列に変換
+    product_name = report.get("製品名")
+    if isinstance(product_name, list):
+        product_name = ", ".join(product_name)
+    
+    client_person = report.get("客先担当者名")
+    if isinstance(client_person, list):
+        client_person = ", ".join(client_person)
+    
+    employee_name = report.get("同行社員名")
+    if isinstance(employee_name, list):
+        employee_name = ", ".join(employee_name)
+    
     c.execute('''
     INSERT INTO weekly_reports
     (mail_id, report_date, reporter, client_name, client_department, client_person, employee_name, product_name, content)
@@ -221,9 +234,9 @@ def db_insert(mail_id, report_date, reporter, report):
         reporter,
         report.get("客先名"),
         report.get("客先部署名"),
-        report.get("客先担当者名"),
-        report.get("同行社員名"),
-        report.get("製品名"),
+        client_person,
+        employee_name,
+        product_name,
         report.get("案件内容")
     ))
     conn.commit()
