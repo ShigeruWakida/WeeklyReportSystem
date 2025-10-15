@@ -4,64 +4,102 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Gmail weekly report processing system that:
-- Fetches emails labeled as "週報" (weekly reports) from Gmail
-- Uses Google Cloud Vertex AI to analyze and extract structured information from the reports
-- Stores extracted data in a SQLite database
+AI-powered weekly report management system that automatically processes Gmail emails using Google Cloud Vertex AI (Gemini) and provides a web interface for data management, filtering, and analytics.
 
 ## Key Dependencies
 
+- Flask (`flask==3.1.2`) - Web framework
 - Google APIs: `googleapiclient`, `google_auth_oauthlib` for Gmail access
-- Google Cloud: `google.cloud.aiplatform` for Vertex AI text analysis
+- Google Cloud: `google.cloud.aiplatform`, `vertexai` for AI text analysis (Gemini 2.0 Flash)
 - SQLite for local data storage
 - Required credential files:
   - `credentials.json` - Gmail API OAuth credentials
   - `vertex-key.json` - Google Cloud service account key
   - `token.pkl` - OAuth token (auto-generated)
 
+## Commands
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run email processor
+python weekly_report_processor.py
+
+# Start web dashboard
+python app.py
+
+# Docker deployment
+docker-compose up
+
+# Production deployment with gunicorn
+gunicorn --bind 0.0.0.0:5000 --workers 4 --timeout 120 app:app
+```
+
 ## Architecture
 
-The main script `weekly_report_processor.py` performs these operations:
-1. Authenticates with Gmail API using OAuth2 flow
-2. Retrieves emails with the "週報" label
-3. For each unprocessed email:
-   - Extracts subject and body text
-   - Sends to Vertex AI for natural language analysis
-   - Parses AI response to extract:
-     - Reporter name
-     - Report date
-     - Multiple client visit reports containing: client name, department, contact person, accompanying employees, content
-   - Stores structured data in SQLite database
-   - Tracks processed email IDs in `processed_ids.json`
+Two main components:
+
+1. **Email Processor** (`weekly_report_processor.py`):
+   - Authenticates with Gmail API using OAuth2
+   - Retrieves emails with "週報" label
+   - Sends to Vertex AI (Gemini) for analysis
+   - Extracts structured data (reporter, date, client info, products, content)
+   - Stores in SQLite database
+   - Tracks processed IDs in `processed_ids.json`
+
+2. **Web Application** (`app.py`):
+   - Flask dashboard at http://localhost:5000
+   - RESTful API endpoints for report management
+   - Real-time processing status via SSE
+   - Filtering by reporter, client, product
+   - Batch operations for deletion
 
 ## Configuration
 
-Key settings in `weekly_report_processor.py`:
-- `PROJECT_ID` - Google Cloud project ID (line 15)
-- `LOCATION` - Vertex AI region (line 16) 
-- `EMPLOYEE_LIST` - List of employee names for matching (lines 21-22)
-- Database schema defined at lines 52-64
+Master data defined in `weekly_report_processor.py`:
+- `REPORTER_LIST` - Valid report authors
+- `EMPLOYEE_LIST` - Employee names for companion identification
+- `PRODUCT_LIST` - Product catalog with standardization (e.g., "2020" → "TF-2020")
+- `PROJECT_ID` - Google Cloud project ID (use env var `GOOGLE_CLOUD_PROJECT_ID`)
+- `LOCATION` - Vertex AI region (default: "us-central1")
 
 ## Database Schema
 
-SQLite table `weekly_reports`:
-- `mail_id` - Unique Gmail message ID
-- `report_date` - Date of the report
-- `reporter` - Person who submitted the report
-- `client_name` - Client company name
-- `client_department` - Client department
-- `client_person` - Client contact person
-- `employee_name` - Accompanying employee from company
-- `content` - Meeting/visit content
-
-## Running the Application
-
-```bash
-python weekly_report_processor.py
+```sql
+CREATE TABLE weekly_reports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mail_id TEXT,
+    report_date TEXT,
+    reporter TEXT,
+    client_name TEXT,
+    client_department TEXT,
+    client_person TEXT,
+    employee_name TEXT,
+    product_name TEXT,
+    content TEXT
+);
 ```
 
-The script will:
-1. Authenticate with Gmail (opens browser on first run)
-2. Process emails one by one with user confirmation
-3. Display processing time for each email
-4. Save progress to avoid reprocessing
+## API Endpoints
+
+- `GET /api/reports` - Retrieve filtered reports with pagination
+- `PUT /api/reports/<id>` - Update report data
+- `POST /api/delete_mail_reports` - Batch delete by mail ID
+- `POST /api/run_processor` - Start email processing
+- `GET /api/process_logs` - Get processing logs (SSE stream)
+
+## Environment Variables
+
+```bash
+GOOGLE_CLOUD_PROJECT_ID="your-project-id"
+SECRET_KEY="your-secret-key"
+DATABASE_PATH="/path/to/weekly_reports.db"  # Optional, defaults to ./weekly_reports.db
+```
+
+## Security Notes
+
+- Never commit `credentials.json`, `vertex-key.json`, or `token.pkl`
+- Use environment variables for sensitive configuration
+- OAuth2 authentication required for Gmail access
+- Service account authentication for Vertex AI

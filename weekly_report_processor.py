@@ -6,6 +6,7 @@ import sqlite3
 import time
 import warnings
 import sys
+import re
 
 # Windows での UTF-8 出力を強制
 if sys.platform == 'win32':
@@ -29,7 +30,7 @@ from vertexai.generative_models import GenerativeModel
 # --------------------
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 PROJECT_ID = "weekly-report-system-470606"  # Google Cloud プロジェクトID
-LOCATION = "asia-northeast1"     # Vertex AI ロケーション（東京）
+LOCATION = "us-central1"     # Vertex AI ロケーション（米国中央）
 DB_FILE = "weekly_reports.db"    # SQLite DBファイル
 PROCESSED_FILE = "processed_ids.json"
 
@@ -66,7 +67,7 @@ service = build('gmail', 'v1', credentials=creds)
 # --------------------
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "vertex-key.json"
 vertexai.init(project=PROJECT_ID, location=LOCATION)
-model = GenerativeModel("gemini-1.5-flash")
+model = GenerativeModel("gemini-2.0-flash")
 
 # --------------------
 # DB初期化
@@ -140,7 +141,8 @@ def process_weekly_report(subject, body, sender, date):
     prompt = f"""
 このメールを解析して、純粋なJSON形式のみで出力してください。
 マークダウンや```記号は使わないでください。
-案件内容は、読みやすいように適切に改行を入れつつ整形してください。
+**重要**: JSON内の文字列では、改行は必ず\\nとしてエスケープしてください。実際の改行文字を含めないでください。
+案件内容は1つの文字列として出力し、改行が必要な場合は\\nを使用してください。
 
 重要な変換ルール：
 - 客先名は必ず簡略化すること
@@ -199,12 +201,14 @@ def process_weekly_report(subject, body, sender, date):
     if content.endswith('```'):
         content = content.rsplit('```', 1)[0]
     content = content.strip()
-    
+
+    # 制御文字をクリーンアップ（タブと改行以外の制御文字を除去）
+    content = re.sub(r'[\x00-\x08\x0b-\x0c\x0e-\x1f]', '', content)
+
     try:
         return json.loads(content)
-    except Exception as e:
+    except json.JSONDecodeError as e:
         print(f"JSON解析エラー: {e}")
-        print(f"応答内容: {content[:200]}...")
         return None
 
 # --------------------
