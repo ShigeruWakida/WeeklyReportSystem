@@ -8,61 +8,65 @@
 
 ---
 
-## 🔄 日常運用手順
+## 🔄 日常運用手順（自動化版）
 
-### ステップ1: ローカルで週報処理
+### ステップ1: 自動デプロイスクリプト実行
 
 #### 1-1. コマンドプロンプトを開く
 ```bash
-cd C:\Users\Treadmill\source\repos\WeeklyReport
+cd C:\Data\VB\WeeklyReport
 ```
 
-#### 1-2. 週報処理を実行
+#### 1-2. 自動デプロイスクリプトを実行
 ```bash
-python weekly_report_processor.py
+python auto_deploy.py
 ```
 
-#### 1-3. 処理の流れ
+#### 1-3. 処理の流れ（全自動）
+スクリプトが以下を自動で実行します：
+
+**ステップ1: 週報メール処理**
 1. Gmailから「週報」ラベルのメールを取得
-2. 各メールごとに処理確認プロンプトが表示
-   ```
-   処理しますか？ (y/n):
-   ```
-   - `y`: 処理実行
-   - `n`: スキップ
-3. Vertex AIで内容解析
-4. `weekly_reports.db`に保存
-5. 処理済みIDを`processed_ids.json`に記録
+2. Vertex AI（Gemini 2.0 Flash）で内容解析
+3. `weekly_reports.db`に保存
+4. 処理済みIDを`processed_ids.json`に記録
+
+**ステップ2: データベースコピー**
+1. `weekly_reports.db`を`with_db_deploy/`にコピー
+2. 既存ファイルがある場合は自動バックアップ（タイムスタンプ付き）
+3. ファイルサイズを表示
+
+**ステップ3: デプロイ用ZIPファイル作成**
+1. `with_db_deploy/`の内容をZIPに圧縮
+2. タイムスタンプ付きファイル名で保存（例: `weekly_reports_deploy_20251020_084621.zip`）
+3. ファイルサイズと完了メッセージを表示
+
+#### 1-4. 実行結果の確認
+```
+[OK] 週報処理が正常に完了しました
+[OK] データベースファイルのコピーが完了しました
+[OK] デプロイパッケージ作成完了: weekly_reports_deploy_20251020_084621.zip
+   ファイルサイズ: 1.90 MB
+```
 
 ---
 
-## 📤 データベースアップロード手順
+## 📤 AWSへのデプロイ手順
 
-### 方法A: Elastic Beanstalkへ直接デプロイ（推奨）
+### ZIPファイルのアップロード
 
-#### A-1. デプロイ用フォルダの準備
-```bash
-# 1. with_db_deployフォルダに最新DBをコピー
-copy weekly_reports.db with_db_deploy\
-
-# 2. フォルダを開く
-explorer with_db_deploy
-```
-
-#### A-2. ZIPファイル作成
-1. `with_db_deploy`フォルダ内の全ファイルを選択（Ctrl+A）
-2. 右クリック → 「送る」 → 「圧縮フォルダー」
-3. ファイル名を設定（例: `WeeklyReport-20240831.zip`）
-
-#### A-3. AWSへデプロイ
+#### 手順1: AWS管理画面にアクセス
 1. [AWS Elastic Beanstalk](https://console.aws.amazon.com/elasticbeanstalk)にアクセス
 2. `WeeklyReportSystem-env`を選択
-3. 「アップロードとデプロイ」をクリック
-4. 作成したZIPファイルを選択
-5. バージョンラベル: `db-update-20240831`（日付を含める）
-6. 「デプロイ」をクリック
 
-#### A-4. デプロイ完了確認
+#### 手順2: デプロイ実行
+1. 「アップロードとデプロイ」をクリック
+2. `auto_deploy.py`で作成されたZIPファイルを選択
+   - ファイル名例: `weekly_reports_deploy_20251020_084621.zip`
+3. バージョンラベル: タイムスタンプを含める（例: `db-update-20251020`）
+4. 「デプロイ」をクリック
+
+#### 手順3: デプロイ完了確認
 - 約2-3分でデプロイ完了
 - ヘルスステータスが「OK」（緑）になることを確認
 
@@ -208,22 +212,31 @@ del processed_ids.json
 
 ## 💡 効率化のヒント
 
-1. **バッチファイル作成**
+1. **バッチファイル作成** (推奨)
+
+   `start_weekly_deploy.bat`を作成：
    ```batch
    @echo off
-   echo 週報処理を開始します...
-   python weekly_report_processor.py
-   echo 処理完了！
+   cd C:\Data\VB\WeeklyReport
+   echo 週報処理とデプロイパッケージ作成を開始します...
+   python auto_deploy.py
+   echo.
+   echo 処理完了！生成されたZIPファイルをAWSにアップロードしてください。
    pause
    ```
 
-2. **定期実行設定**
-   - Windowsタスクスケジューラーで自動実行
-   - 毎週月曜日の朝に自動処理
+   このバッチファイルをダブルクリックするだけで全処理が実行されます。
 
-3. **バックアップ自動化**
-   ```batch
-   copy weekly_reports.db backup\weekly_reports_%date:~0,4%%date:~5,2%%date:~8,2%.db
+2. **定期実行設定**
+   - Windowsタスクスケジューラーで`auto_deploy.py`を自動実行
+   - 毎週月曜日の朝に自動処理
+   - ZIPファイルは自動生成されるので、手動アップロードのみ実施
+
+3. **手動処理が必要な場合**
+
+   週報処理のみ実行したい場合：
+   ```bash
+   python weekly_report_processor.py
    ```
 
 ---
@@ -247,4 +260,4 @@ A: SQLiteは最大2GBまで対応可能です。
 
 ---
 
-最終更新: 2024年8月31日
+最終更新: 2025年10月20日

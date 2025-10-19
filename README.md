@@ -77,12 +77,40 @@ WeeklyReportSystem/
 
 ## 🎯 Usage
 
-### Process Weekly Reports
+### Automated Deployment (Recommended)
+
+The `auto_deploy.py` script automates the entire workflow from email processing to deployment package creation:
+
+```bash
+python auto_deploy.py
+```
+
+This single command will:
+1. **Process weekly reports**: Fetch emails from Gmail and analyze with Vertex AI
+2. **Update database**: Save structured data to SQLite
+3. **Copy database**: Backup and copy to deployment directory
+4. **Create ZIP package**: Generate timestamped deployment package for AWS
+
+Output example:
+```
+[OK] 週報処理が正常に完了しました
+[OK] データベースファイルのコピーが完了しました
+[OK] デプロイパッケージ作成完了: weekly_reports_deploy_20251020_084621.zip
+   ファイルサイズ: 1.90 MB
+```
+
+After running this script, simply upload the generated ZIP file to AWS Elastic Beanstalk.
+
+### Manual Processing (Advanced)
+
+For manual control over individual steps:
+
+**Process Weekly Reports Only**
 ```bash
 python weekly_report_processor.py
 ```
 
-### Start Web Dashboard
+**Start Web Dashboard (Local Development)**
 ```bash
 python app.py
 ```

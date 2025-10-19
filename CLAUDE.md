@@ -23,10 +23,14 @@ AI-powered weekly report management system that automatically processes Gmail em
 # Install dependencies
 pip install -r requirements.txt
 
-# Run email processor
+# Automated deployment (recommended)
+# Processes emails, copies DB, creates deployment ZIP
+python auto_deploy.py
+
+# Run email processor (manual)
 python weekly_report_processor.py
 
-# Start web dashboard
+# Start web dashboard (local development)
 python app.py
 
 # Docker deployment
