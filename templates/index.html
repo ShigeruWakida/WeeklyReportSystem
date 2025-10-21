@@ -25,12 +25,6 @@
                 <button id="toggleSidebarBtn" class="btn btn-outline-light btn-sm" onclick="toggleSidebar()" title="サイドバー表示切替">
                     <i class="bi bi-layout-sidebar-inset"></i>
                 </button>
-                <button id="processReportsBtn" class="btn btn-light btn-sm" onclick="processWeeklyReports()" title="Gmail から新しい週報を処理">
-                    <i class="bi bi-envelope-plus"></i> 週報処理
-                </button>
-                <div id="processStatus" style="display: none;" class="text-warning">
-                    <i class="bi bi-hourglass-split"></i> 処理中...
-                </div>
                 <div>
                     <span id="totalCount">0</span>件
                     <small class="ms-2 opacity-75">（最新10件表示）</small>
@@ -186,31 +180,6 @@
         </div>
     </div>
 
-    <!-- 週報処理ログモーダル -->
-    <div class="modal fade" id="processLogModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">週報処理実行中</h5>
-                    <button type="button" class="btn-close" id="processLogCloseBtn" style="display: none;" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="processLogContent" class="bg-dark text-light p-3 rounded" style="height: 400px; overflow-y: auto; font-family: monospace; font-size: 0.9em; color: #ffffff !important; background-color: #212529 !important;">
-                        <div class="text-center">
-                            <div class="spinner-border text-light" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <div class="mt-2">週報処理を開始しています...</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <div id="processLogStatus" class="text-muted me-auto">処理中...</div>
-                    <button type="button" class="btn btn-secondary" id="processLogOkBtn" style="display: none;" data-bs-dismiss="modal">閉じる</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- データベース修正モーダル -->
     <div class="modal fade" id="editModal" tabindex="-1">
@@ -223,6 +192,9 @@
                 <div class="modal-body" id="editModalContent">
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-danger me-auto" onclick="deleteProjectData()">
+                        <i class="bi bi-trash"></i> 削除
+                    </button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
                     <button type="button" class="btn btn-primary" onclick="saveProjectData()">保存</button>
                 </div>

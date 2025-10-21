@@ -439,6 +439,21 @@ def update_project(project_id):
     
     return jsonify({'success': True})
 
+@app.route('/api/project/<int:project_id>', methods=['DELETE'])
+def delete_project(project_id):
+    """個別プロジェクトを削除"""
+    conn = get_db()
+    cursor = conn.execute('DELETE FROM weekly_reports WHERE id = ?', (project_id,))
+    
+    if cursor.rowcount == 0:
+        conn.close()
+        return jsonify({'error': 'Project not found'}), 404
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True, 'message': 'Project deleted successfully'})
+
 @app.route('/api/delete_mail_projects/<mail_id>', methods=['DELETE'])
 def delete_mail_projects(mail_id):
     """指定されたメールIDの全案件を削除"""
@@ -638,3 +653,7 @@ if __name__ == '__main__':
     init_db()
     # 開発環境用設定
     app.run(debug=True, host='0.0.0.0', port=5000)
+
+# Elastic Beanstalk用
+application = app
+# init_db()はElastic Beanstalkでは実行しない（DBファイルは別途アップロード）

@@ -99,13 +99,49 @@ async function saveProjectData() {
             const modal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
             modal.hide();
             
-            // 表示を更新(必要に応じて再読み込み)
-            // loadReports();
+            // 表示を更新
+            loadReports();
         } else {
             throw new Error('保存に失敗しました');
         }
     } catch (error) {
         console.error('保存エラー:', error);
         alert('データの保存に失敗しました: ' + error.message);
+    }
+}
+
+// 案件データを削除
+async function deleteProjectData() {
+    const projectId = document.getElementById('editProjectId').value;
+    
+    // 確認ダイアログを表示
+    if (!confirm('この案件を削除してもよろしいですか？\nこの操作は取り消せません。')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/project/${projectId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            alert('案件を削除しました');
+            
+            // モーダルを閉じる
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+            modal.hide();
+            
+            // 表示を更新
+            loadReports();
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || '削除に失敗しました');
+        }
+    } catch (error) {
+        console.error('削除エラー:', error);
+        alert('案件の削除に失敗しました: ' + error.message);
     }
 }
