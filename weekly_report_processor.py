@@ -259,16 +259,29 @@ for msg in all_messages:
     sender = next((h['value'] for h in headers if h['name'] == 'From'), "")
     date = next((h['value'] for h in headers if h['name'] == 'Date'), "")
 
-    # 本文取得
+    # 本文取得（ネストされたpartsに対応）
+    def get_body_recursive(part):
+        """再帰的にtext/plainの本文を探す"""
+        # mimeTypeがtext/plainで、dataがある場合
+        if part.get('mimeType') == 'text/plain' and 'data' in part.get('body', {}):
+            return base64.urlsafe_b64decode(part['body']['data']).decode('utf-8')
+
+        # partsがある場合、再帰的に探す
+        if 'parts' in part:
+            for subpart in part['parts']:
+                result = get_body_recursive(subpart)
+                if result:
+                    return result
+        return None
+
     body = ""
     payload = msg_data['payload']
-    if 'parts' in payload:
-        for part in payload['parts']:
-            if part['mimeType'] == 'text/plain':
-                data = part['body']['data']
-                body = base64.urlsafe_b64decode(data).decode('utf-8')
-    else:
+    body = get_body_recursive(payload)
+    if not body and 'data' in payload.get('body', {}):
+        # フォールバック: トップレベルのbodyから取得
         body = base64.urlsafe_b64decode(payload['body']['data']).decode('utf-8')
+    if not body:
+        body = ""
 
     # AI解析
     start_time = time.time()
