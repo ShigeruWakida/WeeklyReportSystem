@@ -126,6 +126,11 @@ def create_deployment_zip():
         with zipfile.ZipFile(zip_name, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for root, dirs, files in os.walk(deploy_dir):
                 for file in files:
+                    # バックアップファイルをスキップ
+                    if '.backup_' in file:
+                        print(f"  スキップ: {file} (バックアップファイル)")
+                        continue
+
                     file_path = Path(root) / file
                     # with_db_deploy/ を除いた相対パスでZIPに追加
                     arcname = str(file_path.relative_to(deploy_dir))
